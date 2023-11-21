@@ -1,7 +1,8 @@
 #include <xc.inc>
 
-extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
+extrn	UART_Setup, UART_Transmit_Message, LCD_Clear  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message
+global	low_byte
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -36,21 +37,35 @@ setup:	bcf	CFGS	; point to Flash program memory
 	clrf	LATE
 	
 	movlw	0x0
-	movwf	TRISD
+	movwf	TRISD, A	; PortD all Outputs
+
+	movwf	TRISF, A	; Port F All outputs
+	movwf	PORTF
 	
 	goto	thing
 	
 thing:
 	movlw	0x0F
 	movwf	TRISE
+	call	delay
 	movff	PORTE, low_byte
+	; movff	PORTE, PORTF
 	
 	movlw	0xF0
 	movwf	TRISE
+	call	delay
 	movf	PORTE, W
-	iorwf	low_byte
+	iorwf	low_byte, A
 	
-	movwf	PORTD
+	movff	low_byte, PORTF
+	; call	LCD_Write_Message
+	
+	movlw	0xFF
+	movwf	delay_count
+	call	delay
+	
+	call	LCD_Clear
+	goto	thing
 	
 
 	; a delay subroutine if you need one, times around loop in delay_count
