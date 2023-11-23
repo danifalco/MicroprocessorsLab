@@ -2,7 +2,8 @@
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message
-extrn	key_reader, out_char
+extrn	key_reader, out_char, key_setup
+global  delay
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -27,13 +28,14 @@ rst: 	org 0x0
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
-	call	LCD_Setup	; setup UART
-	goto	main
+	call	LCD_Setup	; setup LCD
+	call	key_setup	; setup keyboard
 	
 	; ******* Main programme ****************************************
 
 main: 	
 	call	key_reader
+
 	
 	movlw	1	; output message to UART
 	lfsr	2, out_char
@@ -42,7 +44,8 @@ main:
 	movlw	1	; output message to LCD
 	lfsr	2, out_char
 	call	LCD_Write_Message
-
+	
+	goto	main
 	goto	$		; goto current line in code
 
 	; a delay subroutine if you need one, times around loop in delay_count
