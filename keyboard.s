@@ -1,29 +1,30 @@
 #include <xc.inc>
 
-global	out_char, key_reader
+global	key_reader, out_char, key_setup, key_val
     
 extrn	delay
     
 psect	udata_acs
 	
-low_byte:   ds 1    
+high_byte:  ds 1    
 delay_count:ds 1    ; Reserve 1 byte ofr counter in the delay routine
 key_val:    ds 1    ; Reserve 1 byte for the key result (binary)
 out_char:   ds 1    ; Reserve 1 byte for the ASCII charater output from keyboard
     
 psect	keyboard_code, class=CODE
 
-key_reader:
+key_setup:
     ; SETUP KEYBOARD
     movlb   15
     bsf	    REPU
     movlb   0
     clrf    LATE
+    return
 
+key_reader:
     ; ACTIVATE PORT F FOR DEBUGGING PURPOSES
     movwf   TRISF, A	; Port F All outputs
     movwf   PORTF
-    
     ; END OF SETUP
     
     ; Begin row read
@@ -38,11 +39,14 @@ key_reader:
     call    delay
     movf    PORTE, W
     iorwf   high_byte, A
-    movwf   key_val, A	; Store button value (binary) in key_val
+    movff   high_byte, key_val
+    ;movwf   key_val, A	; Store button value (binary) in key_val
+    
+    movff   key_val, PORTF
 
 ; Decode
 is_1:
-    movlw   11101110b
+    movlw   0xEF
     cpfseq  key_val
     bra	    is_2
     movlw   '1'
@@ -50,7 +54,7 @@ is_1:
     bra	    output
 
 is_2:
-    movlw   11101100b
+    movlw   0xED
     cpfseq  key_val
     bra	    is_3
     movlw   '2'
@@ -58,7 +62,7 @@ is_2:
     bra	    output
     
 is_3:
-    movlw   11101010b
+    movlw   0xEB
     cpfseq  key_val
     bra	    is_F
     movlw   '3'
@@ -66,7 +70,7 @@ is_3:
     bra	    output
     
 is_F:
-    movlw   11100110b
+    movlw   0xE7
     cpfseq  key_val
     bra	    is_4
     movlw   'F'
@@ -74,7 +78,7 @@ is_F:
     bra	    output
     
 is_4:
-    movlw   11011110b
+    movlw   0xDF
     cpfseq  key_val
     bra	    is_5
     movlw   '4'
@@ -82,7 +86,7 @@ is_4:
     bra	    output
     
 is_5:
-    movlw   11011100b
+    movlw   0xDD
     cpfseq  key_val
     bra	    is_6
     movlw   '5'
@@ -90,7 +94,7 @@ is_5:
     bra	    output
     
 is_6:
-    movlw   11011010b
+    movlw   0xDB
     cpfseq  key_val
     bra	    is_E
     movlw   '6'
@@ -98,7 +102,7 @@ is_6:
     bra	    output
     
 is_E:
-    movlw   11010110b
+    movlw   0xD7
     cpfseq  key_val
     bra	    is_7
     movlw   'E'
@@ -106,7 +110,7 @@ is_E:
     bra	    output
     
 is_7:
-    movlw   10111110b
+    movlw   0xBF
     cpfseq  key_val
     bra	    is_8
     movlw   '7'
@@ -114,7 +118,7 @@ is_7:
     bra	    output
     
 is_8:
-    movlw   10111100b
+    movlw   0xBD
     cpfseq  key_val
     bra	    is_9
     movlw   '8'
@@ -122,7 +126,7 @@ is_8:
     bra	    output
     
 is_9:
-    movlw   10111010b
+    movlw   0xBB
     cpfseq  key_val
     bra	    is_D
     movlw   '9'
@@ -130,7 +134,7 @@ is_9:
     bra	    output
     
 is_D:
-    movlw   10110110b
+    movlw   0xB7
     cpfseq  key_val
     bra	    is_A
     movlw   'D'
@@ -138,7 +142,7 @@ is_D:
     bra	    output
     
 is_A:
-    movlw   1111110b
+    movlw   0x7F
     cpfseq  key_val
     bra	    is_0
     movlw   'A'
@@ -146,7 +150,7 @@ is_A:
     bra	    output
     
 is_0:
-    movlw   1111100b
+    movlw   0x7D
     cpfseq  key_val
     bra	    is_B
     movlw   '0'
@@ -154,7 +158,7 @@ is_0:
     bra	    output
     
 is_B:
-    movlw   1111010b
+    movlw   0x7B
     cpfseq  key_val
     bra	    is_C
     movlw   'B'
@@ -162,7 +166,7 @@ is_B:
     bra	    output
     
 is_C:
-    movlw   1110110b
+    movlw   0x77
     cpfseq  key_val
     bra	    invalid
     movlw   'C'
